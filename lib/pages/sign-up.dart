@@ -19,10 +19,10 @@ class SignUp extends StatefulWidget {
   SignUpState createState() => SignUpState();
 }
 
-class SignUpState extends State<SignUp> {
-  String? imagePath;
-  Face? faceDetected;
-  Size? imageSize;
+class SignUpState extends State {
+  late String imagePath;
+  late Face? faceDetected;
+  late Size imageSize;
 
   bool _detectingFaces = false;
   bool pictureTaken = false;
@@ -32,10 +32,10 @@ class SignUpState extends State<SignUp> {
   bool _saving = false;
   bool _bottomSheetVisible = false;
 
-  // service injection
-  FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
-  CameraService _cameraService = locator<CameraService>();
-  MLService _mlService = locator<MLService>();
+// service injection
+  FaceDetectorService _faceDetectorService = locator();
+  CameraService _cameraService = locator();
+  MLService _mlService = locator();
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class SignUpState extends State<SignUp> {
     _frameFaces();
   }
 
-  Future<bool> onShot() async {
+  Future onShot() async {
     if (faceDetected == null) {
       showDialog(
         context: context,
@@ -72,10 +72,10 @@ class SignUpState extends State<SignUp> {
     } else {
       _saving = true;
       await Future.delayed(Duration(milliseconds: 500));
-      await _cameraService.cameraController?.stopImageStream();
-      await Future.delayed(Duration(milliseconds: 200));
+      //await _cameraService.cameraController.stopImageStream();
+      //await Future.delayed(Duration(milliseconds: 200));
       XFile? file = await _cameraService.takePicture();
-      imagePath = file?.path;
+      imagePath = file!.path;
 
       setState(() {
         _bottomSheetVisible = true;
@@ -99,6 +99,9 @@ class SignUpState extends State<SignUp> {
           await _faceDetectorService.detectFacesFromImage(image);
 
           if (_faceDetectorService.faces.isNotEmpty) {
+            setState(() {
+              faceDetected = _faceDetectorService.faces[0];
+            });
             if (_saving) {
               _mlService.setCurrentPrediction(image, faceDetected);
               setState(() {
@@ -138,7 +141,7 @@ class SignUpState extends State<SignUp> {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
-    late Widget body;
+    Widget body;
     if (_initializing) {
       body = Center(
         child: CircularProgressIndicator(),
@@ -153,7 +156,7 @@ class SignUpState extends State<SignUp> {
             alignment: Alignment.center,
             child: FittedBox(
               fit: BoxFit.cover,
-              child: Image.file(File(imagePath!)),
+              child: Image.file(File(imagePath)),
             ),
             transform: Matrix4.rotationY(mirror)),
       );
@@ -177,8 +180,8 @@ class SignUpState extends State<SignUp> {
                   children: <Widget>[
                     CameraPreview(_cameraService.cameraController!),
                     CustomPaint(
-                      painter: FacePainter(
-                          face: faceDetected!, imageSize: imageSize!),
+                      painter:
+                          FacePainter(face: faceDetected, imageSize: imageSize),
                     ),
                   ],
                 ),
@@ -192,7 +195,6 @@ class SignUpState extends State<SignUp> {
     return Scaffold(
         body: Stack(
           children: [
-            body,
             CameraHeader(
               "SIGN UP",
               onBackPressed: _onBackPressed,

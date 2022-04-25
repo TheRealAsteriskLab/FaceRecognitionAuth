@@ -36,10 +36,11 @@ class MLService {
               waitType: TFLGpuDelegateWaitType.active),
         );
       }
-      var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
+      //var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
 
-      this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
-          options: interpreterOptions);
+      this._interpreter = await Interpreter.fromAsset(
+        "mobilefacenet.tflite",
+      );
     } catch (e) {
       print('Failed to load model.');
       print(e);
